@@ -54,7 +54,7 @@ setup(
     url="https://github.com/ApeWorX/ape-frame",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.5.7,<0.6.0",
+        "eth-ape>=0.6.7,<0.7",
     ],
     python_requires=">=3.8,<4",
     extras_require=extras_require,
