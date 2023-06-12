@@ -11,7 +11,7 @@ extras_require = {
     ],
     "lint": [
         "black>=22.10.0",  # auto-formatter and linter
-        "mypy>=0.982",  # Static type analyzer
+        "mypy>=0.991,<1",  # Static type analyzer
         "types-setuptools",  # Needed for mypy type shed
         "flake8>=5.0.4",  # Style linter
         "isort>=5.10.1",  # Import sorting linter
@@ -54,7 +54,7 @@ setup(
     url="https://github.com/ApeWorX/ape-frame",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.5.7,<0.6.0",
+        "eth-ape>=0.6.10,<0.7",
     ],
     python_requires=">=3.8,<4",
     extras_require=extras_require,
@@ -75,5 +75,6 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )
