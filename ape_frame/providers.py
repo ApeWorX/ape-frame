@@ -17,7 +17,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
     @property
     def uri(self) -> str:
         # TODO: Add config for this
-        return "http://127.0.01:1248"
+        return "http://127.0.0.1:1248"
 
     @property
     def connection_str(self) -> str:
