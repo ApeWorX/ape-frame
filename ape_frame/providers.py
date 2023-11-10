@@ -17,7 +17,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
     @property
     def uri(self) -> str:
         # TODO: Add config for this
-        return "http://127.0.01:1248"
+        return "http://127.0.0.1:1248"
 
     @property
     def connection_str(self) -> str:
@@ -43,7 +43,6 @@ class FrameProvider(Web3Provider, UpstreamProvider):
         optimism = (10, 420)
         polygon = (137, 80001)
         try:
-
             if self._web3.eth.chain_id in (ethereum_goerli, *optimism, *polygon):
                 self._web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
@@ -64,7 +63,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
         try:
             return super()._make_request(endpoint, parameters)
         except HTTPError as err:
-            response_data = err.response.json()
+            response_data = err.response.json() if err.response else {}
             if "error" not in response_data:
                 raise FrameProviderError(str(err)) from err
 
