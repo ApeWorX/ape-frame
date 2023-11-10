@@ -44,9 +44,9 @@ class FrameAccount(AccountAPI):
             return None
 
         return MessageSignature(  # type: ignore[call-arg]
-            v=raw_signature[64],
-            r=raw_signature[0:32],
-            s=raw_signature[32:64],
+            v=raw_signature[64],  # type: ignore[arg-type]
+            r=raw_signature[0:32],  # type: ignore[arg-type]
+            s=raw_signature[32:64],  # type: ignore[arg-type]
         )
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
@@ -63,8 +63,8 @@ class FrameAccount(AccountAPI):
             return None
 
         txn.signature = TransactionSignature(  # type: ignore[call-arg]
-            v=raw_signature[64],
-            r=raw_signature[0:32],
-            s=raw_signature[32:64],
+            v=raw_signature[64],  # type: ignore[arg-type]
+            r=raw_signature[0:32],  # type: ignore[arg-type]
+            s=raw_signature[32:64],  # type: ignore[arg-type]
         )
         return txn

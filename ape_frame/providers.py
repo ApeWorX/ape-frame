@@ -59,7 +59,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
 
         self._web3 = None
 
-    def _make_request(self, endpoint: str, parameters: list) -> Any:
+    def _make_request(self, endpoint: str, parameters: list) -> Any:  # type: ignore[override]
         try:
             return super()._make_request(endpoint, parameters)
         except HTTPError as err:
