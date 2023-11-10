@@ -24,7 +24,7 @@ class AccountContainer(AccountContainerAPI):
 class FrameAccount(AccountAPI):
     @property
     def web3(self) -> Web3:
-        return Web3(HTTPProvider("http://127.0.01:1248"))
+        return Web3(HTTPProvider("http://127.0.0.1:1248"))
 
     @property
     def alias(self) -> str:
