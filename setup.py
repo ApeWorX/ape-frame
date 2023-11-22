@@ -11,15 +11,16 @@ extras_require = {
     ],
     "lint": [
         "black>=23.11.0,<24",  # Auto-formatter and linter
-        "mypy>=1.6.1,<2",  # Static type analyzer
-        "types-requests",  # Needed due to mypy typeshed
-        "types-setuptools",  # Needed due to mypy typeshed
-        "types-PyYAML",  # Needed due to mypy typeshed
+        "mypy>=1.7.0,<2",  # Static type analyzer
+        "types-requests",  # Needed for mypy type shed
+        "types-setuptools",  # Needed for mypy type shed
+        "types-PyYAML",  # Needed for mypy type shed
         "flake8>=6.1.0,<7",  # Style linter
         "isort>=5.10.1,<6",  # Import sorting linter
         "mdformat>=0.7.17",  # Auto-formatter for markdown
         "mdformat-gfm>=0.3.5",  # Needed for formatting GitHub-flavored markdown
         "mdformat-frontmatter>=0.4.1",  # Needed for frontmatters-style headers in issue templates
+        "mdformat-pyproject>=0.0.1",  # Allows configuring in pyproject.toml
     ],
     "release": [  # `release` GitHub Action job uses this
         "setuptools",  # Installation tool
@@ -59,7 +60,7 @@ setup(
     url="https://github.com/ApeWorX/ape-frame",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.6.0,<0.7.0",
+        "eth-ape>=0.7.0,<0.8",
     ],
     python_requires=">=3.8,<4",
     extras_require=extras_require,
