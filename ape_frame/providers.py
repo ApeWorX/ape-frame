@@ -1,7 +1,8 @@
 from typing import Any
 
-from ape.api import UpstreamProvider, Web3Provider
+from ape.api import UpstreamProvider
 from ape.exceptions import ProviderError
+from ape_ethereum.provider import Web3Provider
 from eth_utils import to_hex
 from requests import HTTPError  # type: ignore[import]
 from web3 import HTTPProvider, Web3

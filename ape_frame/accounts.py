@@ -52,7 +52,7 @@ class FrameAccount(AccountAPI):
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         # TODO: need a way to deserialized from raw bytes
         # raw_signed_txn_bytes = self.web3.eth.sign_transaction(txn.dict())
-        txn_data = txn.dict(exclude={"sender"})
+        txn_data = txn.model_dump(mode="json", by_alias=True)(exclude={"sender"})
         unsigned_txn = serializable_unsigned_transaction_from_dict(txn_data)
         try:
             raw_signature = self.web3.eth.sign(self.address, hexstr=keccak(unsigned_txn).hex())
