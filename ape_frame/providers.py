@@ -1,6 +1,7 @@
 from typing import Any
 
-from ape.api import UpstreamProvider, Web3Provider
+from ape.api import UpstreamProvider
+from ape_ethereum.provider import Web3Provider
 from ape.exceptions import ProviderError
 from eth_utils import to_hex
 from requests import HTTPError  # type: ignore[import]
@@ -24,7 +25,12 @@ class FrameProvider(Web3Provider, UpstreamProvider):
         return self.uri
 
     def connect(self):
-        self._web3 = Web3(HTTPProvider(self.uri))
+        headers = {
+            "Origin": "Ape",
+            "User-Agent": "ape-frame/0.1.0",
+            "Content-Type": "application/json"
+        }
+        self._web3 = Web3(HTTPProvider(self.uri, request_kwargs={"headers": headers}))
 
         if "Frame" not in self._web3.client_version:
             raise FrameNotConnectedError()
