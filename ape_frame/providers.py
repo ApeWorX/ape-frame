@@ -1,8 +1,8 @@
 from typing import Any
 
 from ape.api import UpstreamProvider
-from ape_ethereum.provider import Web3Provider
 from ape.exceptions import ProviderError
+from ape_ethereum.provider import Web3Provider
 from eth_utils import to_hex
 from requests import HTTPError  # type: ignore[import]
 from web3 import HTTPProvider, Web3
@@ -28,7 +28,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
         headers = {
             "Origin": "Ape",
             "User-Agent": "ape-frame/0.1.0",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         self._web3 = Web3(HTTPProvider(self.uri, request_kwargs={"headers": headers}))
 
