@@ -4,12 +4,12 @@ from ape.api import UpstreamProvider
 from ape.exceptions import ProviderError
 from ape_ethereum.provider import Web3Provider
 from eth_utils import to_hex
-from requests import HTTPError  # type: ignore[import]
+from requests import HTTPError
 from web3 import HTTPProvider, Web3
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import geth_poa_middleware
 
-from .exceptions import FrameNotConnectedError, FrameProviderError
+from ape_frame.exceptions import FrameNotConnectedError, FrameProviderError
 
 
 class FrameProvider(Web3Provider, UpstreamProvider):
