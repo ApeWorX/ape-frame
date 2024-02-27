@@ -38,7 +38,7 @@ class FrameAccount(AccountAPI):
     @property
     def web3(self) -> Web3:
         headers = {
-            "Origin": "Ape",
+            "Origin": "Ape/ape-frame/account",
             "User-Agent": "ape-frame/0.1.0",
             "Content-Type": "application/json",
         }

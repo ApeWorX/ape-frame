@@ -26,7 +26,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
 
     def connect(self):
         headers = {
-            "Origin": "Ape",
+            "Origin": "Ape/ape-frame/provider",
             "User-Agent": "ape-frame/0.1.0",
             "Content-Type": "application/json",
         }
