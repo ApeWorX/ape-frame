@@ -1,10 +1,12 @@
-from typing import Iterator, Optional
+from typing import Any, Callable, Iterator, Optional, Union
 
 from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
+from eip712.messages import EIP712Message
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
-from eth_account.messages import _hash_eip191_message
+from eth_account.messages import encode_defunct
 from eth_utils.curried import keccak
+from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 
 
@@ -21,10 +23,26 @@ class AccountContainer(AccountContainerAPI):
         yield FrameAccount()
 
 
+def wrap_sign(fn: Callable) -> Optional[bytes]:
+    try:
+        return fn()
+
+    except ValueError as err:
+        if not err.args[0]["message"] == "User declined transaction":
+            raise  # The ValueError
+
+        return None
+
+
 class FrameAccount(AccountAPI):
     @property
     def web3(self) -> Web3:
-        return Web3(HTTPProvider("http://127.0.0.1:1248"))
+        headers = {
+            "Origin": "Ape/ape-frame/account",
+            "User-Agent": "ape-frame/0.1.0",
+            "Content-Type": "application/json",
+        }
+        return Web3(HTTPProvider("http://127.0.0.1:1248", request_kwargs={"headers": headers}))
 
     @property
     def alias(self) -> str:
@@ -34,37 +52,64 @@ class FrameAccount(AccountAPI):
     def address(self) -> AddressType:
         return self.web3.eth.accounts[0]
 
-    def sign_message(self, msg: SignableMessage) -> Optional[MessageSignature]:
-        try:
-            raw_signature = self.web3.eth.sign(self.address, hexstr=_hash_eip191_message(msg).hex())
-        except ValueError as e:
-            if not e.args[0]["message"] == "User declined transaction":
-                raise
+    def sign_message(self, msg: Any, **signer_options) -> Optional[MessageSignature]:
+        raw_signature = None
 
-            return None
+        if isinstance(msg, str):
+            raw_signature = wrap_sign(lambda: self.web3.eth.sign(self.address, text=msg))
+        elif isinstance(msg, int):
+            raw_signature = wrap_sign(
+                lambda: self.web3.eth.sign(self.address, hexstr=HexBytes(msg).hex())
+            )
+        elif isinstance(msg, bytes):
+            raw_signature = wrap_sign(lambda: self.web3.eth.sign(self.address, hexstr=msg.hex()))
+        elif isinstance(msg, SignableMessage):
+            raw_signature = wrap_sign(lambda: self.web3.eth.sign(self.address, data=msg.body))
+        elif isinstance(msg, EIP712Message):
+            raw_signature = wrap_sign(
+                lambda: self.web3.eth.sign_typed_data(
+                    self.address, msg._body_  # type: ignore[arg-type]
+                )
+            )
 
-        return MessageSignature(  # type: ignore[call-arg]
-            v=raw_signature[64],  # type: ignore[arg-type]
-            r=raw_signature[0:32],  # type: ignore[arg-type]
-            s=raw_signature[32:64],  # type: ignore[arg-type]
+        return (
+            MessageSignature(
+                v=int(raw_signature[64]),
+                r=HexBytes(raw_signature[0:32]),
+                s=HexBytes(raw_signature[32:64]),
+            )
+            if raw_signature
+            else None
         )
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
         # TODO: need a way to deserialized from raw bytes
-        # raw_signed_txn_bytes = self.web3.eth.sign_transaction(txn.dict())
-        txn_data = txn.dict(exclude={"sender"})
+        txn_data = txn.model_dump(by_alias=True, mode="json", exclude={"sender"})
         unsigned_txn = serializable_unsigned_transaction_from_dict(txn_data)
-        try:
-            raw_signature = self.web3.eth.sign(self.address, hexstr=keccak(unsigned_txn).hex())
-        except ValueError as e:
-            if not e.args[0]["message"] == "User declined transaction":
-                raise
-
-            return None
-
-        txn.signature = TransactionSignature(  # type: ignore[call-arg]
-            v=raw_signature[64],  # type: ignore[arg-type]
-            r=raw_signature[0:32],  # type: ignore[arg-type]
-            s=raw_signature[32:64],  # type: ignore[arg-type]
+        raw_signature = wrap_sign(
+            lambda: self.web3.eth.sign(self.address, hexstr=keccak(unsigned_txn).hex())
+        )
+        txn.signature = (
+            TransactionSignature(
+                v=int(raw_signature[64]),
+                r=HexBytes(raw_signature[0:32]),
+                s=HexBytes(raw_signature[32:64]),
+            )
+            if raw_signature
+            else None
         )
         return txn
+
+    def check_signature(
+        self,
+        data: Union[SignableMessage, TransactionAPI, str, EIP712Message, int],
+        signature: Optional[MessageSignature] = None,
+    ) -> bool:
+        if isinstance(data, str):
+            data = encode_defunct(text=data)
+        elif isinstance(data, bytes):
+            data = encode_defunct(primitive=data)
+        if isinstance(data, EIP712Message):
+            data = data.signable_message
+
+        return super().check_signature(data, signature)

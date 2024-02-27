@@ -1,14 +1,15 @@
 from typing import Any
 
-from ape.api import UpstreamProvider, Web3Provider
+from ape.api import UpstreamProvider
 from ape.exceptions import ProviderError
+from ape_ethereum.provider import Web3Provider
 from eth_utils import to_hex
-from requests import HTTPError  # type: ignore[import]
+from requests import HTTPError
 from web3 import HTTPProvider, Web3
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 from web3.middleware import geth_poa_middleware
 
-from .exceptions import FrameNotConnectedError, FrameProviderError
+from ape_frame.exceptions import FrameNotConnectedError, FrameProviderError
 
 
 class FrameProvider(Web3Provider, UpstreamProvider):
@@ -24,7 +25,12 @@ class FrameProvider(Web3Provider, UpstreamProvider):
         return self.uri
 
     def connect(self):
-        self._web3 = Web3(HTTPProvider(self.uri))
+        headers = {
+            "Origin": "Ape/ape-frame/provider",
+            "User-Agent": "ape-frame/0.1.0",
+            "Content-Type": "application/json",
+        }
+        self._web3 = Web3(HTTPProvider(self.uri, request_kwargs={"headers": headers}))
 
         if "Frame" not in self._web3.client_version:
             raise FrameNotConnectedError()
