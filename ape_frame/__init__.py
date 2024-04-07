@@ -10,12 +10,15 @@ NETWORKS = {
     ],
     "arbitrum": [
         "mainnet",
+        "sepolia",
     ],
     "optimism": [
         "mainnet",
+        "sepolia",
     ],
     "polygon": [
         "mainnet",
+        "amoy",
     ],
 }
 

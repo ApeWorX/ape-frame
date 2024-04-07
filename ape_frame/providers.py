@@ -46,8 +46,8 @@ class FrameProvider(Web3Provider, UpstreamProvider):
 
         # Any chain that *began* as PoA needs the middleware for pre-merge blocks
         ethereum_sepolia = 11155111
-        optimism = (10, 420)
-        polygon = (137, 80001)
+        optimism = (10, 11155420)
+        polygon = (137, 80002)
         try:
             if self._web3.eth.chain_id in (ethereum_sepolia, *optimism, *polygon):
                 self._web3.middleware_onion.inject(geth_poa_middleware, layer=0)
