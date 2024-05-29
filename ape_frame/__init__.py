@@ -6,17 +6,19 @@ from .providers import FrameProvider
 NETWORKS = {
     "ethereum": [
         "mainnet",
-        "goerli",
         "sepolia",
     ],
     "arbitrum": [
         "mainnet",
+        "sepolia",
     ],
     "optimism": [
         "mainnet",
+        "sepolia",
     ],
     "polygon": [
         "mainnet",
+        "amoy",
     ],
 }
 
