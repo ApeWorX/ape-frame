@@ -1,8 +1,10 @@
 from typing import Any, Callable, Iterator, Optional, Union
 
 from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
+from ape.exceptions import AccountsError
 from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
 from eip712.messages import EIP712Message
+from eth_account import Account
 from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
 from eth_account.messages import encode_defunct
 from eth_utils.curried import keccak
@@ -102,14 +104,19 @@ class FrameAccount(AccountAPI):
 
     def check_signature(
         self,
-        data: Union[SignableMessage, TransactionAPI, str, EIP712Message, int],
-        signature: Optional[MessageSignature] = None,
+        data: Union[SignableMessage, TransactionAPI, str, EIP712Message, int, bytes],
+        signature: Optional[MessageSignature] = None,  # TransactionAPI doesn't need it
+        recover_using_eip191: bool = True,
     ) -> bool:
         if isinstance(data, str):
             data = encode_defunct(text=data)
-        elif isinstance(data, bytes):
-            data = encode_defunct(primitive=data)
-        if isinstance(data, EIP712Message):
+        elif isinstance(data, bytes) and (len(data) != 32 or recover_using_eip191):
+            data = encode_defunct(data)
+        elif isinstance(data, EIP712Message):
             data = data.signable_message
+        elif isinstance(data, bytes) and len(data) == 32 and not recover_using_eip191:
+            return self.address == Account._recover_hash(data, vrs=signature)
+        else:
+            raise AccountsError(f"Unsupported message type: {type(data)}.")
 
         return super().check_signature(data, signature)
