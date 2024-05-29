@@ -1,4 +1,5 @@
-from typing import Any, Callable, Iterator, Optional, Union
+from collections.abc import Callable, Iterator
+from typing import Any, Optional, Union
 
 from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
 from ape.exceptions import AccountsError
@@ -13,6 +14,12 @@ from web3 import HTTPProvider, Web3
 
 
 class AccountContainer(AccountContainerAPI):
+    """
+    The account container for Fsrame accounts in Ape.
+    """
+
+    name: str = "frame"
+
     @property
     def aliases(self) -> Iterator[str]:
         yield "frame"
@@ -69,9 +76,7 @@ class FrameAccount(AccountAPI):
             raw_signature = wrap_sign(lambda: self.web3.eth.sign(self.address, data=msg.body))
         elif isinstance(msg, EIP712Message):
             raw_signature = wrap_sign(
-                lambda: self.web3.eth.sign_typed_data(
-                    self.address, msg._body_  # type: ignore[arg-type]
-                )
+                lambda: self.web3.eth.sign_typed_data(self.address, msg._body_)
             )
 
         return (
