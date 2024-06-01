@@ -1,4 +1,5 @@
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, Optional
 
 from ape.api import UpstreamProvider
 from ape.exceptions import ProviderError
@@ -65,9 +66,10 @@ class FrameProvider(Web3Provider, UpstreamProvider):
 
         self._web3 = None
 
-    def _make_request(self, endpoint: str, parameters: list) -> Any:  # type: ignore[override]
+    def make_request(self, rpc: str, parameters: Optional[Iterable] = None) -> Any:
+        parameters = parameters or []
         try:
-            return super()._make_request(endpoint, parameters)
+            return super().make_request(rpc, parameters=parameters)
         except HTTPError as err:
             response_data = err.response.json() if err.response else {}
             if "error" not in response_data:
