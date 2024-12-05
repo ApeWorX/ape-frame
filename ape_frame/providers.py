@@ -8,7 +8,11 @@ from eth_utils import to_hex
 from requests import HTTPError
 from web3 import HTTPProvider, Web3
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
-from web3.middleware import geth_poa_middleware
+
+try:
+    from web3.middleware import ExtraDataToPOAMiddleware  # type: ignore
+except ImportError:
+    from web3.middleware import geth_poa_middleware as ExtraDataToPOAMiddleware  # type: ignore
 
 from ape_frame.exceptions import FrameNotConnectedError, FrameProviderError
 
@@ -51,7 +55,7 @@ class FrameProvider(Web3Provider, UpstreamProvider):
         polygon = (137, 80002)
         try:
             if self._web3.eth.chain_id in (ethereum_sepolia, *optimism, *polygon):
-                self._web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+                self._web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
             self._web3.eth.set_gas_price_strategy(rpc_gas_price_strategy)
         except Exception as err:
