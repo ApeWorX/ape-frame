@@ -1,5 +1,6 @@
-from ape import plugins
+from importlib import import_module
 
+from ape import plugins
 
 NETWORKS = {
     "ethereum": [
@@ -39,3 +40,17 @@ def providers():
     for ecosystem, networks in NETWORKS.items():
         for network in networks:
             yield ecosystem, network, FrameProvider
+
+
+def __getattr__(name: str):
+    if name == "FrameProvider":
+        return getattr(import_module("ape_accounts.providers"), name)
+
+    return getattr(import_module("ape_accounts.accounts"), name)
+
+
+__all__ = [
+    "AccountContainer",
+    "FrameAccount",
+    "FrameProvider",
+]
