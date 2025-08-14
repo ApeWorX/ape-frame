@@ -1,7 +1,5 @@
 from ape import plugins
 
-from .accounts import AccountContainer, FrameAccount
-from .providers import FrameProvider
 
 NETWORKS = {
     "ethereum": [
@@ -9,6 +7,10 @@ NETWORKS = {
         "sepolia",
     ],
     "arbitrum": [
+        "mainnet",
+        "sepolia",
+    ],
+    "base": [
         "mainnet",
         "sepolia",
     ],
@@ -25,11 +27,15 @@ NETWORKS = {
 
 @plugins.register(plugins.AccountPlugin)
 def account_types():
+    from .accounts import AccountContainer, FrameAccount
+
     return AccountContainer, FrameAccount
 
 
 @plugins.register(plugins.ProviderPlugin)
 def providers():
+    from .providers import FrameProvider
+
     for ecosystem, networks in NETWORKS.items():
         for network in networks:
             yield ecosystem, network, FrameProvider
