@@ -14,7 +14,7 @@ try:
 except ImportError:
     from web3.middleware import geth_poa_middleware as ExtraDataToPOAMiddleware  # type: ignore
 
-from ape_frame.exceptions import FrameNotConnectedError, FrameProviderError
+from .exceptions import FrameNotConnectedError, FrameProviderError
 
 
 class FrameProvider(Web3Provider, UpstreamProvider):

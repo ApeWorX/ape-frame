@@ -1,16 +1,14 @@
 from collections.abc import Callable, Iterator
-from typing import Any, Optional, Union
+from importlib.metadata import version
+from typing import Any, Optional, cast
 
-from ape.api.accounts import AccountAPI, AccountContainerAPI, TransactionAPI
-from ape.exceptions import AccountsError
-from ape.types import AddressType, MessageSignature, SignableMessage, TransactionSignature
+from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
+from ape.exceptions import ProviderError, SignatureError
+from ape.types import AddressType, MessageSignature, SignableMessage
 from eip712.messages import EIP712Message
-from eth_account import Account
-from eth_account._utils.legacy_transactions import serializable_unsigned_transaction_from_dict
-from eth_account.messages import encode_defunct
-from eth_utils.curried import keccak
 from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
+from web3.exceptions import Web3RPCError
 
 
 class AccountContainer(AccountContainerAPI):
@@ -36,8 +34,11 @@ def wrap_sign(fn: Callable) -> Optional[bytes]:
     try:
         return fn()
 
-    except ValueError as err:
-        if not err.args[0]["message"] == "User declined transaction":
+    except Web3RPCError as err:
+        if (
+            not (rpc_error := cast(dict, err.rpc_response).get("error", {}))
+            or not rpc_error.get("message", "") == "User declined transaction"
+        ):
             raise  # The ValueError
 
         return None
@@ -46,9 +47,11 @@ def wrap_sign(fn: Callable) -> Optional[bytes]:
 class FrameAccount(AccountAPI):
     @property
     def web3(self) -> Web3:
+        ape_version = version("eth-ape")
+        plugin_version = version("ape-frame")
         headers = {
-            "Origin": "Ape/ape-frame/account",
-            "User-Agent": "ape-frame/0.1.0",
+            "Origin": "Ape",
+            "User-Agent": f"Ape-Frame/{plugin_version};Ape/{ape_version}",
             "Content-Type": "application/json",
         }
         return Web3(HTTPProvider("http://127.0.0.1:1248", request_kwargs={"headers": headers}))
@@ -90,38 +93,15 @@ class FrameAccount(AccountAPI):
         )
 
     def sign_transaction(self, txn: TransactionAPI, **signer_options) -> Optional[TransactionAPI]:
-        # TODO: need a way to deserialized from raw bytes
+        return None
+
+    def call(self, txn: TransactionAPI, private: bool = False, **kwargs) -> ReceiptAPI:
+        # NOTE: Need to override the default implementation since Frame does not support sign txn
+        if private:
+            raise ProviderError("Private Mempool not supported by Frame")
+
         txn_data = txn.model_dump(by_alias=True, mode="json", exclude={"sender"})
-        unsigned_txn = serializable_unsigned_transaction_from_dict(txn_data)
-        raw_signature = wrap_sign(
-            lambda: self.web3.eth.sign(self.address, hexstr=keccak(unsigned_txn).hex())
-        )
-        txn.signature = (
-            TransactionSignature(
-                v=int(raw_signature[64]),
-                r=HexBytes(raw_signature[0:32]),
-                s=HexBytes(raw_signature[32:64]),
-            )
-            if raw_signature
-            else None
-        )
-        return txn
+        if txn_hash := wrap_sign(lambda: self.web3.eth.send_transaction(txn_data)):
+            return self.chain_manager.get_receipt(txn_hash)
 
-    def check_signature(
-        self,
-        data: Union[SignableMessage, TransactionAPI, str, EIP712Message, int, bytes],
-        signature: Optional[MessageSignature] = None,  # TransactionAPI doesn't need it
-        recover_using_eip191: bool = True,
-    ) -> bool:
-        if isinstance(data, str):
-            data = encode_defunct(text=data)
-        elif isinstance(data, bytes) and (len(data) != 32 or recover_using_eip191):
-            data = encode_defunct(data)
-        elif isinstance(data, EIP712Message):
-            data = data.signable_message
-        elif isinstance(data, bytes) and len(data) == 32 and not recover_using_eip191:
-            return self.address == Account._recover_hash(data, vrs=signature)
-        else:
-            raise AccountsError(f"Unsupported message type: {type(data)}.")
-
-        return super().check_signature(data, signature)
+        raise SignatureError("The transaction was not signed.", transaction=txn)
