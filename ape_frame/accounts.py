@@ -5,7 +5,7 @@ from typing import Any, Optional, cast
 from ape.api import AccountAPI, AccountContainerAPI, ReceiptAPI, TransactionAPI
 from ape.exceptions import ProviderError, SignatureError
 from ape.types import AddressType, MessageSignature, SignableMessage
-from eip712.messages import EIP712Message
+from eip712.messages import EIP712Message, extract_eip712_struct_message
 from hexbytes import HexBytes
 from web3 import HTTPProvider, Web3
 from web3.exceptions import Web3RPCError
@@ -78,9 +78,8 @@ class FrameAccount(AccountAPI):
         elif isinstance(msg, SignableMessage):
             raw_signature = wrap_sign(lambda: self.web3.eth.sign(self.address, data=msg.body))
         elif isinstance(msg, EIP712Message):
-            raw_signature = wrap_sign(
-                lambda: self.web3.eth.sign_typed_data(self.address, msg._body_)
-            )
+            data = extract_eip712_struct_message(msg)
+            raw_signature = wrap_sign(lambda: self.web3.eth.sign_typed_data(self.address, data))
 
         return (
             MessageSignature(

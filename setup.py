@@ -63,7 +63,8 @@ setup(
     url="https://github.com/ApeWorX/ape-frame",
     include_package_data=True,
     install_requires=[
-        "eth-ape>=0.8.1,<0.9",
+        "eth-ape>=0.8.43,<0.9",
+        "eip712>=0.3",
         "web3>=6.20.1,<8",
         "requests>=2.28.1,<3",
     ],
